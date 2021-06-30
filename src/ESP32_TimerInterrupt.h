@@ -198,6 +198,27 @@ class ESP32TimerInterrupt
       return setFrequency( (float) ( 1000000.0f / interval), callback);
     }
 
+      bool changeFrequency(float frequency)
+    {
+      // select timer frequency is 1MHz for better accuracy. We don't use 16-bit prescaler for now.
+      // Will use later if very low frequency is needed.
+      _frequency  = 1000000;
+      _timerCount = (uint64_t) _frequency / frequency;
+      // count up
+      
+      TISR_LOGWARN3(F("ESP32TimerInterrupt: _timerNo ="), _timerNo, F(", _fre ="), _frequency);
+      TISR_LOGWARN3(F("_count ="), (uint32_t) (_timerCount >> 32) , F("-"), (uint32_t) (_timerCount));
+
+      timerAlarmWrite(_timer, _timerCount, true);
+      timerAlarmEnable(_timer);
+      return true;
+    }
+
+    bool changeInterval(unsigned long interval)
+    {
+      return changeFrequency( (float) ( 1000000.0f / interval));
+    }
+
     void detachInterrupt()
     {
       timerDetachInterrupt(_timer);
